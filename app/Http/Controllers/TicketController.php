@@ -51,8 +51,8 @@ class TicketController extends Controller
         $filename = time().'.png';
         $path = 'public/qrcodes/'.$filename;
 
-        Storage::put($path, $result);
-
+        
+        Storage::disk('public')->put($path, $result);
         foreach($seatsArr as $seat) {
             $ticket = new Ticket();
             $ticket->session_id = $sessionId;
