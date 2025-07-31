@@ -95,7 +95,7 @@ export default function Admin() {
                 <h1 className="page-header__title">Идём<span>в</span>кино</h1>
                 <span className="page-header__subtitle">Администраторррская</span>
             </header>
-
+        
             <main className="conf-steps">
                 <HallManagement csrfToken={csrfToken} hallsData={hallsData} getHallData={getHallData} />
 

@@ -9,6 +9,7 @@ declare global {
             film_name: string,
             country: string,
             short_description: string,
+            url: string,
         },
         
         sessionData: Array<sessionData>
@@ -47,6 +48,7 @@ declare global {
         id: number,
         short_description: string,
         country: string,
+        url: string,
     }
 
     interface sessionState {

@@ -8,9 +8,14 @@ interface salesProps {
     getSessionData: () => Promise<void>
 }
 
+interface TypeSelected {
+    type: 'none' | 'toActive' | 'toDeactive' | 'both'
+}
+
 export function OpenSales(props: salesProps) {
 
     const [hallId, setHallId] = useState(0);
+    const [typeSelected, setTypeSelected] = useState<TypeSelected>({ type: "none" })
     const [sessionsData, setSessionsData] = useState<sessionState[]>([]);
 
     useEffect(() => {
@@ -25,6 +30,45 @@ export function OpenSales(props: salesProps) {
         }
 
     }, [props.sessionsData])
+
+    useEffect(() => {
+        const stateArr = { isOpen: false, isClose: false }
+        sessionsData.some((session) => {
+            console.log(session.is_selected)
+            if (session.is_active && session.is_selected) {
+
+                stateArr.isClose = true
+                return true
+            }
+        })
+
+        sessionsData.some((session) => {
+            if (!session.is_active && session.is_selected) {
+                stateArr.isOpen = true
+                return true
+            }
+        })
+
+        setTypeSelected(() => {
+            if (stateArr.isClose === true && stateArr.isOpen === false) {
+                return { type: 'toDeactive' }
+            }
+            if (stateArr.isClose === false && stateArr.isOpen === true) {
+                return { type: 'toActive' }
+            }
+            if (stateArr.isClose === true && stateArr.isOpen === true) {
+                return { type: 'both' }
+            }
+            return { type: 'none' }
+        })
+    }, [sessionsData])
+
+      useEffect(() => {
+        if (props.hallsData[0]) {
+            setHallId(props.hallsData[0].id)
+        }
+        
+    }, [props.hallsData[0]])
 
     function makeDateArr(sessionsData: Array<sessionData>) {
 
@@ -87,21 +131,47 @@ export function OpenSales(props: salesProps) {
         })
     }
 
-    async function toogleSales(action: string) {
+    async function toogleSales() {
 
-        const dataArr: number[] = [];
+        const activSession: number[] = [];
+        const deactivSession: number[] = [];
         sessionsData.forEach((session) => {
 
-            if (session.is_selected) {
-                dataArr.push(session.id)
+            if (session.is_selected && session.is_active) {
+                activSession.push(session.id)
             }
+            if (session.is_selected && !session.is_active) {
+                deactivSession.push(session.id)
+            }
+
 
         })
 
-        if (dataArr.length !== 0) {
-            const dataForSend = JSON.stringify({ 'ids': dataArr })
+        if (deactivSession.length !== 0) {
+            const dataForSend = JSON.stringify({ 'ids': deactivSession })
             try {
-                const response = await fetch(`/session/${action}`, {
+                const response = await fetch(`/session/activate`, {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': props.csrfToken === null ? "" : props.csrfToken
+                    },
+                    body: dataForSend
+                })
+
+                if (response.ok) {
+                    props.getSessionData()
+                }
+            } catch (error) {
+                console.error('Ошибка при переключении сеанса:', error);
+            }
+        }
+
+        if (activSession.length !== 0) {
+            const dataForSend = JSON.stringify({ 'ids': activSession })
+            try {
+                const response = await fetch(`/session/deactivate`, {
                     method: "POST",
                     headers: {
                         'Content-Type': 'application/json',
@@ -120,20 +190,29 @@ export function OpenSales(props: salesProps) {
         }
     }
 
+    function buttonValue () {
+        switch (typeSelected.type) {
+            case 'none': return "Выберите сеанс для действия"
+            case 'toActive': return 'Открыть продажи'
+            case 'toDeactive': return 'Закрыть продажи'
+            case 'both': return 'Открыть/Закрыть продажи'
+        }
+    }
+   
     return (
         <section className="conf-step">
             <header className="conf-step__header conf-step__header_opened">
                 <h2 className="conf-step__title">Открыть продажи</h2>
             </header>
 
-            <div className="conf-step__wrapper text-center">
+            <div className="conf-step__wrapper">
 
                 <p className="conf-step__paragraph">Выберите зал:</p>
                 <ul className="conf-step__selectors-box">
-                    {props.hallsData.map((hall) => {
+                    {props.hallsData.map((hall, index) => {
                         return (
                             <li key={hall.id}>
-                                <input type="radio" required className="conf-step__radio" name="hall_id" value={hall.id} onClick={() => { setHallId(hall.id) }} />
+                                <input type="radio" required className="conf-step__radio" defaultChecked={index === 0} name="hall_id" value={hall.id} onClick={() => { setHallId(hall.id) }} />
                                 <span className="conf-step__selector">{hall.name}</span>
                             </li>
                         )
@@ -154,7 +233,7 @@ export function OpenSales(props: salesProps) {
                                             if (session.date === date && session.hall_id === hallId) {
                                                 return (
                                                     <div key={session.id} className="conf-step__movie" style={setStyle(session)} onClick={() => { getSelected(session) }}>
-                                                        <img className="conf-step__movie-poster" alt="poster" src="i/poster.png" />
+                                                        <img className="conf-step__movie-poster" alt="poster" src={props.filmsData.find(film => film.id === session.film_id)?.url} />
                                                         <h3 className="conf-step__movie-title">{props.filmsData.find(film => film.id === session.film_id)?.film_name}</h3>
                                                         <p className="conf-step__movie-duration">Начало показа: {convertMinutes(session.session_begin)}</p>
                                                     </div>
@@ -174,8 +253,7 @@ export function OpenSales(props: salesProps) {
 
                 </ul>
                 <p className="conf-step__paragraph">Всё готово, теперь можно:</p>
-                <button className="conf-step__button conf-step__button-accent" onClick={(e) => { toogleSales('activate') }}>Открыть продажу билетов</button>
-                <button className="conf-step__button conf-step__button-accent" onClick={(e) => { toogleSales('deactivate') }}>Закрыть продажу билетов</button>
+                <button className="conf-step__button conf-step__button-accent" disabled={typeSelected.type === 'none'} onClick={(e) => { toogleSales() }}>{buttonValue()}</button>
             </div>
         </section>
     )

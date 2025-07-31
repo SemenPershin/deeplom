@@ -40,7 +40,7 @@ export default function Welcome() {
             console.error('Ошибка при добавлении:', error);
         }
     }
-
+    console.log(userWelcomeData)
     return (
         <>
             <Head title='Идем в кино - Главная' />
@@ -58,7 +58,7 @@ export default function Welcome() {
                             <section key={index} className="movie">
                                 <div className="movie__info">
                                     <div className="movie__poster">
-                                        <img className="movie__poster-image" alt="Звёздные войны постер" src="i/poster1.jpg" />
+                                        <img className="movie__poster-image" alt="Звёздные войны постер" src={data.filmData.url} />
                                     </div>
                                     <div className="movie__description">
                                         <h2 className="movie__title">{data.filmData.film_name}</h2>

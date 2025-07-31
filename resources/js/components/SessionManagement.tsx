@@ -11,10 +11,23 @@ interface SessionProps {
 }
 
 export function SessionManagement(props: SessionProps) {
-    
+
     const [createForm, setCreateForm] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
     const [currentSession, setCurrentSession] = useState({ 'hall_id': 0, 'date': '', 'time': '', 'film_id': 0, 'price_default': 0, 'price_vip': 0, 'session_id': 0 });
+
+    useEffect(() => {
+        if (props.hallsData[0]) {
+            setCurrentSession((prevState) => { return { ...prevState, 'hall_id': props.hallsData[0].id } });
+        }
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const day = String(currentDate.getDate()).padStart(2, '0');
+        const formattedDate = `${year}-${month}-${day}`;
+
+        setCurrentSession((prevState) => { return { ...prevState, 'date': formattedDate } })
+    }, [props.hallsData[0]])
 
     async function postSession(e: React.FormEvent<HTMLFormElement>, id?: number) {
         if (e.target instanceof HTMLFormElement) {
@@ -137,10 +150,10 @@ export function SessionManagement(props: SessionProps) {
                 <div className="conf-step__wrapper">
                     <p className="conf-step__paragraph">Выберите зал:</p>
                     <ul className="conf-step__selectors-box">
-                        {props.hallsData.map((element) => {
+                        {props.hallsData.map((element, index) => {
                             return (
                                 <li key={element.id}>
-                                    <input type="radio" required className="conf-step__radio" name="hall_id" value={element.id} onClick={() => { setCurrentSession((prevState) => { return { ...prevState, 'hall_id': element.id } }) }} />
+                                    <input type="radio" required defaultChecked={index === 0} className="conf-step__radio" name="hall_id" value={element.id} onClick={() => { setCurrentSession((prevState) => { return { ...prevState, 'hall_id': element.id } }) }} />
                                     <span className="conf-step__selector">{element.name}</span>
                                 </li>
                             )
@@ -158,7 +171,6 @@ export function SessionManagement(props: SessionProps) {
 
                     <div className="conf-step__seances">
                         <div className="conf-step__seances-hall">
-                            { ((currentSession.hall_id === 0) || (currentSession.date === '')) ?  <p className="conf-step__paragraph"><strong>Выберите ЗАЛ и ДАТУ для просмотра сетки сеансов</strong></p> : <></>}
                             <h3 className="conf-step__seances-title">{props.hallsData.find(hall => hall.id === currentSession.hall_id)?.name} - {currentSession.date}</h3>
                             <div className="conf-step__seances-timeline">
 
@@ -173,19 +185,19 @@ export function SessionManagement(props: SessionProps) {
                                             <div key={session.id} className="conf-step__seances-movie" style={{ width: `${sessionLength}px`, backgroundColor: "rgb(133, 255, 137)", left: `${sessionBegin}px` }} onClick={() => { setCreateForm(true); setIsEdit(true); setCurrentSession((prevState) => { return { ...prevState, 'time': convertMinutes(session.session_begin), 'film_id': session.film_id, 'price_default': session.price_default, 'price_vip': session.price_vip, 'session_id': session.id } }) }}>
                                                 <p className="conf-step__seances-movie-title">{filmName?.film_name}</p>
                                                 <p className="conf-step__seances-movie-start" >{sessionStart}</p>
-                                                
+
                                             </div>
-                                            
+
                                         )
                                     }
 
                                 })}
 
-                                
+
                             </div>
                         </div>
                     </div>
-
+                    <p className="conf-step__paragraph">Для редактирования или удаления сеанса нажмите на него в таймлайне </p>
                 </div>
             </form>
 

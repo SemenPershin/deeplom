@@ -12,20 +12,22 @@ interface FilmProps {
 export function FilmConfiguration(props: FilmProps) {
     const [createForm, setCreateForm] = useState(false);
     const [editForm, setEditForm] = useState({ 'isActive': false, 'filmId': 0 });
-    const [filmData, setFilmData] = useState({ 'name': '', 'time': 0, 'description': '', 'country': '' })
+    const [filmData, setFilmData] = useState({ 'name': '', 'time': 1, 'description': '', 'country': '' })
 
     async function postFilm(e: React.FormEvent<HTMLFormElement>, id: number | undefined = undefined) {
         if (e.target instanceof HTMLFormElement) {
             const formData = new FormData(e.target);
+            console.log(formData.get('img'))
             try {
                 const response = await fetch(id === undefined ? `/film` : `/film/${id}`, {
                     method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
+                        
                         'Accept': 'application/json',
+                        
                         'X-CSRF-TOKEN': props.csrfToken === null ? "" : props.csrfToken
                     },
-                    body: JSON.stringify(Object.fromEntries(formData))
+                    body: formData
                 })
 
                 if (response.ok) {
@@ -65,6 +67,18 @@ export function FilmConfiguration(props: FilmProps) {
         }
     }
 
+    function onChangeFilmTime(e: React.ChangeEvent<HTMLInputElement>) {
+        if (Number(e.target.value) < 1) {
+            console.log(1)
+            setFilmData((prevState) => { return { ...prevState, 'time': 1 } });
+        } else {
+            setFilmData((prevState) => { return { ...prevState, 'time': Number(e.target.value) } });
+        }
+
+
+
+    }
+
     function filmForm(id?: number, name?: string, time?: number, description?: string, country?: string) {
         return <>
             <p className="conf-step__paragraph"><strong>{createForm === true ? 'Добавление фильма' : 'Редактирование фильма'}</strong></p>
@@ -74,22 +88,27 @@ export function FilmConfiguration(props: FilmProps) {
 
                 <label className="login__label">
                     Название фильма
-                    <input className="login__input" name="name" required type='text' value={name} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'name': e.target.value } }) }} />
+                    <input className="login__input" name="name" required type='text' value={filmData.name} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'name': e.target.value } }) }} />
                 </label>
 
                 <label className="login__label">
                     Длительность фильма, мин
-                    <input className="login__input" name="time" required type='number' value={time} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'time': Number(e.target.value) } }) }} />
+                    <input className="login__input" name="time" required type='number' value={filmData.time} onChange={(e) => { onChangeFilmTime(e) }} />
                 </label>
 
                 <label className="login__label">
                     Краткое описание
-                    <textarea className="login__input" name="description" required value={description} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'description': e.target.value } }) }} />
+                    <textarea className="login__input" name="description" required value={filmData.description} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'description': e.target.value } }) }} />
                 </label>
 
                 <label className="login__label">
                     Страна производства
-                    <input className="login__input" name="country" required type='text' value={country} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'country': e.target.value } }) }} />
+                    <input className="login__input" name="country" required type='text' value={filmData.country} onChange={(e) => { setFilmData((prevState) => { return { ...prevState, 'country': e.target.value } }) }} />
+                </label>
+
+                <label className="login__label">
+                    Постер
+                    <input className="login__input" name="img"  type='file'/>
                 </label>
 
                 <div className="text-center">
@@ -109,7 +128,7 @@ export function FilmConfiguration(props: FilmProps) {
             </header>
             <div className="conf-step__wrapper">
                 <p className="conf-step__paragraph">
-                    <button className="conf-step__button conf-step__button-accent" onClick={() => { setCreateForm(!createForm); setEditForm({ 'isActive': false, 'filmId': 0 }) }}>{createForm === false ? 'Добавить фильм' : 'Скрыть'}</button>
+                    <button className="conf-step__button conf-step__button-accent" onClick={() => { setCreateForm(!createForm); setEditForm({ 'isActive': false, 'filmId': 0 }); setFilmData({ 'name': '', 'time': 1, 'description': '', 'country': '' }) }}>{createForm === false ? 'Добавить фильм' : 'Скрыть'}</button>
                 </p>
                 {createForm === true ? filmForm() : <></>}
                 {editForm.isActive === true ? filmForm(editForm.filmId, filmData.name, filmData.time, filmData.description, filmData.country) : <></>}
@@ -117,7 +136,7 @@ export function FilmConfiguration(props: FilmProps) {
                     {props.filmsData.map((element) => {
                         return (
                             <div key={element.id} className="conf-step__movie" onClick={() => { setEditForm({ 'isActive': true, 'filmId': element.id }); setCreateForm(false); setFilmData({ 'name': element.film_name, 'time': element.film_duration, 'description': element.short_description, 'country': element.country }) }}>
-                                <img className="conf-step__movie-poster" alt="poster" src="i/poster.png" />
+                                <img className="conf-step__movie-poster" alt="poster" src={element.url} />
                                 <h3 className="conf-step__movie-title">{element.film_name}</h3>
                                 <p className="conf-step__movie-duration">{element.film_duration} минут </p>
                             </div>

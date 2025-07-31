@@ -127,6 +127,31 @@ export function HallConfiguration(props: HallManagementProps) {
         })
     }
 
+    function onChangeRow (e: React.ChangeEvent<HTMLInputElement>) {
+        const reg = /^[0-9]/;
+        if (reg.test(e.target.value)) {
+            
+            setRowsAndPlaces({ "rows": Number(e.target.value), 'places': rowsAndPlaces.places, 'hall_id': rowsAndPlaces.hall_id });
+        }
+    }
+
+     function onChangePlace (e: React.ChangeEvent<HTMLInputElement>) {
+        const reg = /^[0-9]/;
+        if (reg.test(e.target.value)) {
+            setRowsAndPlaces({ "rows": rowsAndPlaces.rows, 'places': Number(e.target.value), 'hall_id': rowsAndPlaces.hall_id }) 
+        }
+    }
+
+    function undo (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+        e.preventDefault();
+        const currentHallData = props.hallsData.find((hall) => {return hall.id === rowsAndPlaces.hall_id });
+        
+        if (currentHallData) {
+            
+            setRowsAndPlaces((prevState) => {return {...prevState, rows: currentHallData.rows, places: currentHallData.places}})
+        }
+        
+    }
     return (
         <section className="conf-step">
             <header className="conf-step__header conf-step__header_opened">
@@ -151,9 +176,9 @@ export function HallConfiguration(props: HallManagementProps) {
 
                     <p className="conf-step__paragraph">Укажите количество рядов и максимальное количество кресел в ряду:</p>
                     <div className="conf-step__legend">
-                        <label className="conf-step__label">Рядов, шт<input type="number" name="rows" min={0} max={20} className="conf-step__input" value={rowsAndPlaces.rows} onChange={(e) => { setRowsAndPlaces({ "rows": Number(e.target.value), 'places': rowsAndPlaces.places, 'hall_id': rowsAndPlaces.hall_id }) }} /></label>
+                        <label className="conf-step__label">Рядов, шт<input type="number" name="rows" min={1} max={20} className="conf-step__input" value={rowsAndPlaces.rows} onChange={(e) => { onChangeRow(e)}} /></label>
                         <span className="multiplier">x</span>
-                        <label className="conf-step__label">Мест, шт<input type="number" name="places" min={0} max={20} className="conf-step__input" value={rowsAndPlaces.places} onChange={(e) => { setRowsAndPlaces({ "rows": rowsAndPlaces.rows, 'places': Number(e.target.value), 'hall_id': rowsAndPlaces.hall_id }) }} /></label>
+                        <label className="conf-step__label">Мест, шт<input type="number" name="places" min={1} max={20} className="conf-step__input" value={rowsAndPlaces.places} onChange={(e) => {onChangePlace(e) }} /></label>
                     </div>
 
                     <p className="conf-step__paragraph">Теперь вы можете указать типы кресел на схеме зала:</p>
@@ -167,6 +192,7 @@ export function HallConfiguration(props: HallManagementProps) {
                     <div className="conf-step__hall">
                         <div className="conf-step__hall-wrapper">
                             {
+                                
                                 placesData?.map((row, indexR) => {
                                     return (
                                         <div key={indexR} className="conf-step__row">
@@ -187,7 +213,7 @@ export function HallConfiguration(props: HallManagementProps) {
                     </div>
 
                     <fieldset className="conf-step__buttons text-center">
-                        <button className="conf-step__button conf-step__button-regular">Отмена</button>
+                        <button className="conf-step__button conf-step__button-regular" onClick={(e)=> {undo(e)}}>Отмена</button>
                         <input type="submit" defaultValue="Сохранить" className="conf-step__button conf-step__button-accent" />
                     </fieldset>
                 </form>

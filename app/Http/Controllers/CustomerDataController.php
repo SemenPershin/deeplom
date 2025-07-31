@@ -17,7 +17,7 @@ class CustomerDataController extends Controller
 
         $filmIds = $sessionArr->pluck('film_id')->unique();
 
-        $filmArr = Film::whereIn('id', $filmIds)->select('film_name', 'film_duration', 'short_description', 'short_description', 'country', 'id')->get();
+        $filmArr = Film::whereIn('id', $filmIds)->select('film_name', 'film_duration', 'short_description', 'short_description', 'country', 'id', 'url')->get();
         
         $userData = [];
 

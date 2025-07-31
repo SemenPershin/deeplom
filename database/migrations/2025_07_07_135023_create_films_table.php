@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('film_duration');
             $table->string('short_description');
             $table->string('country');
+            $table->string('url', 2048);
             $table->timestamps();
         });
     }

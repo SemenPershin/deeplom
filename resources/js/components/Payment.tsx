@@ -18,7 +18,6 @@ interface PaymentProps {
 export  function Payment(props: PaymentProps) {
 
     const [qrCode, setQrCode] = useState({isActive: false, url: ''})
-    console.log(qrCode)
     async function sendTicketData() {
         const data = JSON.stringify({session_id: props.bookingInfo.session_id, seatsArr: props.bookingInfo.selectPlaces})
          try {
